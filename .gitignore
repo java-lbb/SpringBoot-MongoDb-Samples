@@ -1,2 +1,6 @@
 # Project exclude paths
 /MongoDb-CRUD-Operation/target/
+.idea/
+*.iml
+*.log
+target/

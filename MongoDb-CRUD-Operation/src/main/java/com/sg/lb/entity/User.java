@@ -23,8 +23,8 @@ public class User {
      *
      * 2.插入或保存时<br/>
      * ① 如果未设置 id 属性值，则其值将由数据库自动生成 ObjectId。为了获取自动生成的结果，类中的 id 属性类型必须是 String、ObjectId 、BigInteger 这三者之一，否则会类型转换异常。<br/>
-     * ② 如果设置了 id 属性值，存储到 MongoDB 中 _id 值就是实际的 java 数据类型对应转换的 MongoDB 中的 Bson 类型, 即 String 对应 String，Integer 对应 int。<br/>
-     * ③ 通常情况下 MongoDB 中 _id 值存储为 objectId, MongoDB 可以实现 ObjectId 到 String 的转换。因此一般 java 中 id 为 String 类型， 注解中存储到 MongoDB 中的 _id 值 targetType 声明为 ObjectId
+     * ② 如果设置了 id 属性值，存储到 MongoDB 中 _id 值就是实际的 java 数据类型对应转换的 MongoDB 中的 Bson 类型, 即 ObjectId 对应 ObjectId, String 对应 String，Integer 对应 int。<br/>
+     * ③ 通常情况下 MongoDB 中 _id 值存储为 objectId, MongoDB 可以实现 ObjectId 到 String 的转换。因此一般 java 中 id 为 String 类型， 注解中中 targetType 声明为 ObjectId。
      */
     @MongoId(targetType = FieldType.OBJECT_ID)
     private String id;
