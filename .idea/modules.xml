@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/MongoDb-Aggregation-Operation/MongoDb-Aggregation-Operation.iml" filepath="$PROJECT_DIR$/MongoDb-Aggregation-Operation/MongoDb-Aggregation-Operation.iml" />
+      <module fileurl="file://$PROJECT_DIR$/MongoDb-CRUD-Operation/MongoDb-CRUD-Operation.iml" filepath="$PROJECT_DIR$/MongoDb-CRUD-Operation/MongoDb-CRUD-Operation.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/SpringBoot-MongoDb-Samples.iml" filepath="$PROJECT_DIR$/.idea/SpringBoot-MongoDb-Samples.iml" />
+    </modules>
+  </component>
+</project>

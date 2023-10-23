@@ -1,0 +1,23 @@
+server:
+  port: 89
+
+spring:
+  data:
+    mongodb:
+      host: 172.22.6.130
+      port: 27017
+      database: scrm_java_test
+      username: kf
+      password: ntkj_8888
+
+#日志配置
+logging:
+  level:
+    root: info
+    org:
+      springframework:
+        boot:
+          autoconfigure: ERROR
+        data:
+          mongodb:
+            core: DEBUG
