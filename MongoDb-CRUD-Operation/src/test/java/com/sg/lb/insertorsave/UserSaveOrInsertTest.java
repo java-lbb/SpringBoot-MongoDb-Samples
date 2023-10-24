@@ -1,17 +1,17 @@
 package com.sg.lb.insertorsave;
 
-import com.sg.lb.entity.Animal;
+import cn.hutool.core.util.RandomUtil;
+import com.sg.lb.entity.Address;
 import com.sg.lb.entity.User;
-import net.bytebuddy.utility.RandomString;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Random;
 
 /**
  * @author LiuBing
@@ -21,17 +21,6 @@ import java.util.Random;
 @SpringBootTest
 public class UserSaveOrInsertTest {
 
-    private final static List<User> userList = new ArrayList<>();
-
-    static  {
-        for (int i = 0; i < 5; i++) {
-            User user = new User();
-            user.setName(RandomString.make());
-            user.setAge(new Random().nextInt(30));
-            userList.add(user);
-        }
-    }
-
     @Autowired
     MongoTemplate mongoTemplate;
 
@@ -40,9 +29,8 @@ public class UserSaveOrInsertTest {
      */
     @Test
     public void insert(){
-        User user = new User();
-        user.setName("小明");
-        user.setAge(18);
+        User user = this.getUserList(1).get(0);
+        user.setFriends(this.getUserList(2));
         mongoTemplate.insert(user);// 插入，有Document注解值则为该集合名，没有注解则以类名小写开头即 "user"
         System.out.println(user);
         //mongoTemplate.insert(user,"user");指定集合名称
@@ -53,6 +41,10 @@ public class UserSaveOrInsertTest {
      */
     @Test
     public void batchInsert(){
+        List<User> userList = this.getUserList(5);
+        for (User user : userList) {
+            user.setFriends(this.getUserList(2));
+        }
         Collection<User> users = mongoTemplate.insert(userList, User.class);
         for (User user : users) {
             System.out.println(user);
@@ -68,11 +60,32 @@ public class UserSaveOrInsertTest {
      */
     @Test
     public void save(){
-        User user = new User();
-        user.setId("123");
-        user.setName("小明");
-        user.setAge(18);
+        User user = this.getUserList(1).get(0);
+        user.setFriends(this.getUserList(2));
         mongoTemplate.save(user);
         System.out.println(user);
+    }
+
+
+    private List<User> getUserList(int limit){
+        List<User> userList = new ArrayList<>();
+        for (int i = 0; i < limit; i++) {
+            User user = new User();
+            user.setFirstname(RandomUtil.randomString(3));
+            user.setLastname(RandomUtil.randomString(3));
+            user.setAge(RandomUtil.randomInt(10,30));
+            user.setHeight(RandomUtil.randomDouble(160.0,190.0));
+            user.setHobbies(RandomUtil.randomEleList(Arrays.asList("篮球","羽毛球","乒乓球","游泳","跑步","滑雪"),3) );
+            List<Address> addressList = new ArrayList<>();
+            for (int j = 0; j < 5; j++) {
+                Address address = new Address();
+                address.setProvince("广东省");
+                address.setCity(Arrays.asList("广州市","深圳市","东莞市","中山市","江门市").get(RandomUtil.randomInt(3)));
+                addressList.add(address);
+            }
+            user.setAddress(addressList.get(RandomUtil.randomInt(5)));
+            userList.add(user);
+        }
+        return userList;
     }
 }

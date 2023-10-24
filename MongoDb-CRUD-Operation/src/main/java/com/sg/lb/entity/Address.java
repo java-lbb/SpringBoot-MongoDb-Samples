@@ -2,10 +2,13 @@ package com.sg.lb.entity;
 
 import lombok.Data;
 
+
 @Data
-public class Animal {
+public class Address {
 
     private String id;
 
-    private String name;
+    private String province;
+
+    private String city;
 }
