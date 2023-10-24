@@ -60,14 +60,14 @@ public class UserSaveOrInsertTest {
      */
     @Test
     public void save(){
-        User user = this.getUserList(1).get(0);
-        user.setFriends(this.getUserList(2));
+        User user = getUserList(1).get(0);
+        user.setFriends(getUserList(2));
         mongoTemplate.save(user);
         System.out.println(user);
     }
 
 
-    private List<User> getUserList(int limit){
+    public static List<User> getUserList(int limit){
         List<User> userList = new ArrayList<>();
         for (int i = 0; i < limit; i++) {
             User user = new User();

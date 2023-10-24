@@ -2,12 +2,20 @@ package com.sg.lb.update;
 
 import com.mongodb.client.result.UpdateResult;
 import com.sg.lb.entity.User;
+import com.sg.lb.insertorsave.UserSaveOrInsertTest;
+import org.bson.BsonValue;
+import org.bson.types.BSONTimestamp;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.ExecutableUpdateOperation;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+
+import java.sql.Timestamp;
+import java.util.List;
 
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
@@ -26,6 +34,12 @@ public class UserUpdateTest {
         */
     }
 
+    /**
+     * $set
+     * 修改某个字段值。
+     * 如果该字段不存在，$set 将添加具有指定值的新字段，前提是该新字段不违反类型约束。
+     * 如果为不存在的字段指定点式路径，$set 将根据需要创建相应的嵌入文档来满足该字段的点式路径。
+     */
     @Test
     public void simpleUpdate(){
         // query: { "first_name" : "小", "last_name" : "明"} and update: { "$set" : { "height" : 178.5}}
@@ -36,6 +50,48 @@ public class UserUpdateTest {
         System.out.println("matchedCount: " + matchedCount);
         long modifiedCount = updateResult.getModifiedCount(); // 修改成功的文档数
         System.out.println("modifiedCount: " + modifiedCount);
+    }
+
+    /**
+     * 尝试修改满足查询条件中的文档字段值，如果不满足查询条件，则把查询条件值以及修改值作为一条新的文档数据进行插入。
+     */
+    @Test
+    public void setUpsert(){
+        Query query = query(where("firstname").is("小").and("lastname").is("明"));
+        Update update = new Update().set("age", 16).set("height",190.5);
+        BsonValue bsonValue = mongoTemplate.update(User.class).matching(query).apply(update).upsert().getUpsertedId();
+        System.out.println("插入的新 _id 值为：" + bsonValue);
+        // 等价于：
+        /*
+         db.getCollection("user").insert( {
+            _id: ObjectId("6537dcd94046e1494a5ca56d"),
+            "first_name": "李",
+            "last_name": "明",
+            age: NumberInt("25"),
+            height: 180.5
+            } );
+        */
+    }
+
+    /**
+     * 更新 "修改时间" 为当前时间，该字段值要么是 timestamp 要么是 date
+     */
+    @Test
+    public void updateCurrentDate(){
+        Query query = query(where("firstname").is("小").and("lastname").is("明"));
+        Update update = new Update().currentDate("lastModified");
+        // 如果不存在 "lastModified" 字段，则会新增该字段，默认类型为 Date
+        mongoTemplate.updateFirst(query,update,User.class);
+    }
+
+    /**
+     * 删除指定字段
+     */
+    @Test
+    public void unset(){
+        Query query = query(where("firstname").is("小").and("lastname").is("花"));
+        Update update = new Update().unset("age");// 删除掉 age 字段
+        mongoTemplate.updateFirst(query,update,User.class);
     }
 
     /**
@@ -143,7 +199,7 @@ public class UserUpdateTest {
     }
 
     /**
-     * 向数组中添加字段值，如果该值不存在。<br/>
+     * 向数组中添加指定值(去重)，如果该值不存在。<br/>
      *  <a href="https://www.mongodb.com/docs/v4.4/reference/operator/update/addToSet/#mongodb-update-up.-addToSet"> $addToSet</a>
      *
      */
@@ -152,7 +208,38 @@ public class UserUpdateTest {
         // 往 hobbies 数组中添加值
         Query query = query(where("lastname").is("明"));
         Update update = new Update().addToSet("hobbies", "攀岩"); // 如果已经存在 "攀岩" 则不会添加进去
-        // 注意：此方式只能添加单个值，如果是这种形式的话： new Update().addToSet("hobbies", Arrays.asList("攀岩","拳击")) 即 -> { "$addToSet" : { "hobbies" : ["攀岩","拳击"] }, 那么最终 hobbies 数组字段如下：hobbies: ["篮球, ["攀岩","拳击"]]
+        // 注意：此方式只能添加单个值，如果是这种形式的话： new Update().addToSet("hobbies", Arrays.asList("攀岩","拳击"))
+        // 即 -> { "$addToSet" : { "hobbies" : ["攀岩","拳击"] }, 原始 hobbies：["篮球"]  ->  hobbies: ["篮球, ["攀岩","拳击"]]
         mongoTemplate.updateFirst(query,update, User.class);
     }
+
+    /**
+     * 向数组中添加多个值
+     */
+    @Test
+    public void addToSetMultiValue(){
+        // { "last_name" : "明"} and update: { "$addToSet" : { "hobbies" : { "$each" : ["棒球", "网球", "足球"]}}}
+        // 原始 hobbies ： ["足球","篮球"] , 新增后 -> hobbies : ["足球","篮球","棒球", "网球"]
+        Query query = query(where("lastname").is("明"));
+        Update update = new Update().addToSet("hobbies").each("棒球","网球","足球");
+        mongoTemplate.updateFirst(query,update, User.class);
+    }
+
+    /**
+     * <a href="https://www.mongodb.com/docs/v4.4/reference/operator/update/push/#mongodb-update-up.-push">$push</a> <br/>
+     * 向数组中添加指定值(不去重)
+     */
+    @Test
+    public void push(){
+        // 1. 往 hobbies 数组中添加指定值
+        Query query = query(where("firstname").is("小").and("lastname").is("明"));
+        Update update1 = new Update().push("hobbies", "乒乓球");
+        mongoTemplate.updateFirst(query,update1, User.class);
+        // 2. 往 friends 文档数组中添加多个文档元素并按照年龄降序排序和切片(只保留最前面的2个文档元素)
+        // using query: { "first_name" : "小", "last_name" : "明"} and update: { "$push" : { "friends" : { "$sort" : { "age" : -1}, "$slice" : 2, "$each" : [{ user1 },{ user2 },{ user3 }]}}}
+        List<User> userList = UserSaveOrInsertTest.getUserList(3);
+        Update update2 = new Update().push("friends").sort(Sort.by("age").descending()).slice(2).each(userList.get(0),userList.get(1),userList.get(2));
+        mongoTemplate.updateFirst(query,update2,User.class);
+    }
+
 }
