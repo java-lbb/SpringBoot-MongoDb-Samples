@@ -4,17 +4,14 @@ import com.mongodb.client.result.UpdateResult;
 import com.sg.lb.entity.User;
 import com.sg.lb.insertorsave.UserSaveOrInsertTest;
 import org.bson.BsonValue;
-import org.bson.types.BSONTimestamp;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.core.ExecutableUpdateOperation;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
-import java.sql.Timestamp;
 import java.util.List;
 
 import static org.springframework.data.mongodb.core.query.Criteria.where;
@@ -242,4 +239,11 @@ public class UserUpdateTest {
         mongoTemplate.updateFirst(query,update2,User.class);
     }
 
+    /**
+     * 移除数组第一个或者最后一个元素
+     */
+    @Test
+    public void pop(){
+
+    }
 }

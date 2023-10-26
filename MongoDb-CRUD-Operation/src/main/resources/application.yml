@@ -7,8 +7,8 @@ spring:
       host: 172.22.6.130
       port: 27017
       database: scrm_java_test
-      username: kf
-      password: ntkj_8888
+      username: root
+      password: root
 
 #日志配置
 logging:
