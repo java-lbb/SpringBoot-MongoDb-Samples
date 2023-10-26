@@ -29,8 +29,8 @@ public class UserSaveOrInsertTest {
      */
     @Test
     public void insert(){
-        User user = this.getUserList(1).get(0);
-        user.setFriends(this.getUserList(2));
+        User user = getUserList(1).get(0);
+        user.setFriends(getUserList(2));
         mongoTemplate.insert(user);// 插入，有Document注解值则为该集合名，没有注解则以类名小写开头即 "user"
         System.out.println(user);
         //mongoTemplate.insert(user,"user");指定集合名称
@@ -41,9 +41,9 @@ public class UserSaveOrInsertTest {
      */
     @Test
     public void batchInsert(){
-        List<User> userList = this.getUserList(5);
+        List<User> userList = getUserList(5);
         for (User user : userList) {
-            user.setFriends(this.getUserList(2));
+            user.setFriends(getUserList(2));
         }
         Collection<User> users = mongoTemplate.insert(userList, User.class);
         for (User user : users) {

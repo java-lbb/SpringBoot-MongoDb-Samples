@@ -1,17 +1,25 @@
 package com.sg.lb.update;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.client.result.UpdateResult;
 import com.sg.lb.entity.User;
 import com.sg.lb.insertorsave.UserSaveOrInsertTest;
+import org.bson.BSONObject;
+import org.bson.BasicBSONObject;
 import org.bson.BsonValue;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.BasicQuery;
+import org.springframework.data.mongodb.core.query.BasicUpdate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static org.springframework.data.mongodb.core.query.Criteria.where;
@@ -244,6 +252,56 @@ public class UserUpdateTest {
      */
     @Test
     public void pop(){
+        // 移除 hobbies 数组的第一个元素
+        Query query = query(where("firstname").is("小").and("lastname").is("明"));
+        Update update = new Update().pop("friends", Update.Position.FIRST);
+        mongoTemplate.updateFirst(query,update,User.class);
+    }
 
+    /**
+     * 移除数组中满足指定 值/条件 的元素 <br/>
+     * { $pull: { field1: value|condition, field2: value|condition, ... } } <p/>
+     */
+    @Test
+    public void pull_01(){
+        // 1.指定值-> query: { "first_name" : "小", "last_name" : "明"} and update: { "$pull" : { "hobbies" : "游泳" } } ,移除 "游泳"
+        Query query = query(where("firstname").is("小").and("lastname").is("明"));
+        Update update1 = new Update().pull("hobbies","游泳");
+        // mongoTemplate.updateFirst(query,update1,User.class);
+        // 2.指定条件 -> query: { "first_name" : "小", "last_name" : "明"} and update: { "$pull" : { "hobbies" : { "$in" : ["篮球", "乒乓球"]}}}
+        BasicBSONObject bsonObject = new BasicBSONObject();
+        bsonObject.put("$in",Arrays.asList("篮球","乒乓球"));
+        Update update2 = new Update().pull("hobbies",bsonObject);
+        mongoTemplate.updateFirst(query,update2,User.class);
+    }
+
+    /**
+     * 如果要删除的指定 value 是文档，则 $pull 仅删除数组中具有完全相同的字段和值的元素, 字段的顺序可以不同。
+     */
+    @Test
+    public void pull_02(){
+        // query:  { "first_name" : "小", "last_name" : "明"} and update: { "$pull" : { "friends" : { "age" : { "$gt" : 18}, "hobbies" : { "$in" : ["游泳", "羽毛球"]}}}}
+        // 含义：前提条件: 为 "小明" 的第一条文档;  移除 friends 数组中某个/多个嵌套文档的条件： age > 18 并且 hobbies 中含有 "游泳" 或者 "羽毛球"
+        Query query = query(where("firstname").is("小").and("lastname").is("明"));
+        // 由于 update 方法中不支持指定条件的匹配，所以可以通过原始 BasicQuery 形式进行编写。
+        BasicQuery basicQuery1 = new BasicQuery("{ age: { $gt: 18 } , hobbies: { $in : ['游泳','羽毛球' ] } }");
+        Update update1 = new Update().pull("friends",basicQuery1);
+        mongoTemplate.updateFirst(query,update1,User.class);
+
+        // 多重嵌套条件
+        BasicQuery basicQuery2 = new BasicQuery("{ friends: { $elemMatch : { height : { $gt: 170, $lt: 180 }, age : { $gt: 18 }  } } }");
+        Update update2 = new Update().pull("friends",basicQuery2);
+        mongoTemplate.updateFirst(query,update2,User.class);
+
+        int i = 1/0;
+    }
+
+    @Test
+    // @Transactional
+    public void MongoDBTxTest(){
+        Query query = query(where("firstname").is("小").and("lastname").is("明"));
+        Update update = new Update().pull("hobbies","游泳");
+        mongoTemplate.updateFirst(query,update,User.class);
+        //int i = 1/0;
     }
 }
