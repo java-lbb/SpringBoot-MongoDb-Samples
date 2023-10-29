@@ -1,6 +1,9 @@
 package com.sg.lb;
 
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
@@ -47,7 +50,7 @@ public class User {
     private List<String> hobbies;
 
     @Field(value = "friends")
-    private List<User> friends;
+    private List<List<User>> friends;
 
     @Field(value = "address")
     private Address address;
